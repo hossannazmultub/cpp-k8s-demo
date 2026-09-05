@@ -1,0 +1,5 @@
+cpp-k8s-demo (1.0.0-1) stable; urgency=low
+
+  * Initial release of C++ Kubernetes Demo Package.
+
+ -- Developer <dev@example.com>  Sat, 05 Sep 2026 12:00:00 +0000

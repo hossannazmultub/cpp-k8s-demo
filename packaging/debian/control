@@ -1,0 +1,12 @@
+Source: cpp-k8s-demo
+Section: utils
+Priority: optional
+Maintainer: Developer <dev@example.com>
+Build-Depends: debhelper-compat (= 13), cmake, ninja-build, g++
+Standards-Version: 4.6.2
+
+Package: cpp-k8s-demo
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Demonstration C++ Microservice
+ A minimal native C++ application packaged into a Debian package.

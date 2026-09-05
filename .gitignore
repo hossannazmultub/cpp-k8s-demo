@@ -1,6 +1,8 @@
 build/
 obj-*/
 debian/
+!packaging/debian/
+!packaging/debian/**
 *.deb
 *.tar
 .DS_Store
