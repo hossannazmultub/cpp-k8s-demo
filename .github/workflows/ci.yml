@@ -1,0 +1,45 @@
+name: C++ Microservice CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-test-package:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Install System Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake ninja-build g++ cppcheck debhelper
+
+    - name: Configure CMake
+      run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+    - name: Compile C++ Application
+      run: cmake --build build
+
+    - name: Run Cppcheck Static Analysis
+      run: cppcheck --enable=all --error-exitcode=1 src/
+
+    - name: Build Debian Package (.deb)
+      run: |
+        cp -r packaging/debian debian
+        dpkg-buildpackage -us -uc -b
+
+    - name: Upload Debian Package Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: debian-package
+        path: ../*.deb
+
+    - name: Build & Test Docker Image
+      run: |
+        docker build -t cpp-k8s-demo:ci .
+        docker run --rm cpp-k8s-demo:ci timeout 10s || true

@@ -1,0 +1,6 @@
+build/
+obj-*/
+debian/
+*.deb
+*.tar
+.DS_Store
