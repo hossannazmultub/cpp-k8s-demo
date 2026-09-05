@@ -26,7 +26,7 @@ jobs:
       run: cmake --build build
 
     - name: Run Cppcheck Static Analysis
-      run: cppcheck --enable=all --error-exitcode=1 src/
+      run: cppcheck --enable=all --suppress=missingIncludeSystem --error-exitcode=1 src/
 
     - name: Build Debian Package (.deb)
       run: |

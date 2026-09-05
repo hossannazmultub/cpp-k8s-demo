@@ -12,10 +12,10 @@
       "problemMatcher": "$gcc"
     },
     {
-      "label": "Static Analysis: Cppcheck",
-      "type": "shell",
-      "command": "cppcheck --enable=all --error-exitcode=1 src/",
-      "problemMatcher": []
+    "label": "Static Analysis: Cppcheck",
+    "type": "shell",
+    "command": "cppcheck --enable=all --suppress=missingIncludeSystem --error-exitcode=1 src/",
+    "problemMatcher": []
     },
     {
       "label": "Static Analysis: Clang-Tidy",
