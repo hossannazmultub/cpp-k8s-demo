@@ -32,12 +32,14 @@ jobs:
       run: |
         cp -r packaging/debian debian
         dpkg-buildpackage -us -uc -b
+        mkdir -p artifacts
+        cp ../*.deb artifacts/
 
     - name: Upload Debian Package Artifact
       uses: actions/upload-artifact@v4
       with:
         name: debian-package
-        path: ../*.deb
+        path: artifacts/*.deb
 
     - name: Build & Test Docker Image
       run: |
