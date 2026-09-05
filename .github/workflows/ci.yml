@@ -44,4 +44,7 @@ jobs:
     - name: Build & Test Docker Image
       run: |
         docker build -t cpp-k8s-demo:ci .
-        timeout 10s docker run --rm cpp-k8s-demo:ci || true
+        docker rm -f cpp-k8s-demo-ci 2>/dev/null || true
+        docker run -d --name cpp-k8s-demo-ci cpp-k8s-demo:ci
+        timeout 10s docker logs -f cpp-k8s-demo-ci || test $? -eq 124
+        docker rm -f cpp-k8s-demo-ci
