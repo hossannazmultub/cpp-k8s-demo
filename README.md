@@ -62,6 +62,14 @@ cmake --build build
 
 The program runs continuously and prints a heartbeat every five seconds. Stop it with `Ctrl+C`.
 
+#### Tools Used
+
+- **WSL 2:** Runs Ubuntu 24.04 alongside Windows and provides a Linux development environment.
+- **Ubuntu:** Supplies the package manager, compiler libraries, shell tools, and runtime environment.
+- **g++:** Compiles the C++17 source code into the native `cpp_app` executable.
+- **CMake:** Describes the project and generates platform-specific build files.
+- **Ninja:** Executes the generated build graph quickly and incrementally.
+
 ### Step 2: Static Analysis & Quality Control
 
 #### Cppcheck
@@ -103,6 +111,12 @@ clang-tidy src/main.cpp -p build/
 - **Static Analysis: Clang-Tidy**
 
 The build task is the default VS Code build task and can be launched with `Ctrl+Shift+B`.
+
+#### Tools Used
+
+- **Cppcheck:** Performs lightweight static analysis for correctness and common defect patterns.
+- **Clang-Tidy:** Applies compiler-assisted checks for bugs, readability, performance, and modern C++ practices.
+- **VS Code tasks:** Provides repeatable editor commands for building and analyzing the project.
 
 ### Step 3: Dual Packaging: Debian and Docker
 
@@ -158,6 +172,14 @@ docker rm -f cpp-k8s-demo-ci
 - Build tools stay out of the final runtime image.
 - `.dockerignore` excludes `build/`, `.git/`, `.vscode/`, `debian/`, and generated `.deb` files.
 - Excluding host build output prevents stale `CMakeCache.txt` files and host-specific paths from entering the Docker build context.
+
+#### Tools Used
+
+- **dpkg-buildpackage:** Builds the native Debian package from the Debian metadata and compiled project.
+- **debhelper:** Provides standard Debian packaging helpers and invokes the CMake build system through `debian/rules`.
+- **Docker:** Builds and runs the application in an isolated, reproducible environment.
+- **Dockerfile:** Defines the builder and runtime image stages.
+- **.dockerignore:** Removes unnecessary files from the Docker build context.
 
 ### Step 4: Local Kubernetes Deployment with Kind
 
@@ -226,9 +248,15 @@ kubectl delete -f k8s/deployment.yaml
 kind delete cluster --name dev-cluster
 ```
 
+#### Tools Used
+
+- **Kind:** Creates a local Kubernetes cluster using Docker containers as nodes.
+- **kubectl:** Applies manifests, inspects resources, and streams pod logs.
+- **Kubernetes Deployment:** Maintains two application replicas and applies resource requests and limits.
+
 ### Step 5: Automated CI/CD with GitHub Actions
 
-`.github/workflows/ci.yml` runs on pushes and pull requests targeting `main`. The workflow performs the following sequence:
+`.github/workflows/ci.yml` runs only for pull requests targeting `main`. In GitHub terminology, this is the merge-request review and validation event. It does not run for ordinary pushes or tag pushes. The workflow performs the following sequence:
 
 1. Checks out the repository.
 2. Installs CMake, Ninja, g++, Cppcheck, debhelper, and Debian build prerequisites.
@@ -242,6 +270,17 @@ kind delete cluster --name dev-cluster
 
 The smoke test starts the container detached, follows its logs for ten seconds, and force-removes the named container. This is important because the application is intentionally a long-running heartbeat service.
 
+#### Tools Used
+
+- **GitHub Actions:** Runs the workflow on a hosted Ubuntu runner for every pull request targeting `main`.
+- **actions/checkout:** Checks out the pull-request source code.
+- **apt-get:** Installs the compiler, build, analysis, and Debian packaging dependencies on the runner.
+- **GitHub Actions artifacts:** Stores the generated `.deb` for inspection during the workflow run.
+- **Docker CLI:** Builds the image, starts the smoke-test container, follows its logs, and removes it.
+- **Bash and `timeout`:** Orchestrate shell steps and bound the long-running smoke test.
+
+Because this workflow is intentionally pull-request-only, it does not publish GitHub Releases or GHCR packages. Those publishing steps should be placed in a separately protected release workflow triggered by an approved tag or manual dispatch.
+
 #### CI Debugging and Hardening
 
 The lifecycle required several practical fixes:
@@ -251,6 +290,18 @@ The lifecycle required several practical fixes:
 - `.gitignore` excludes local build output and generated Debian files while allowing the source packaging metadata to remain tracked.
 - The artifact upload was changed from `../*.deb` to `artifacts/*.deb`, because artifact actions reject relative paths that leave the workspace.
 - The Docker timeout was moved from an argument to the application entrypoint into an explicit detached-container lifecycle, ensuring the runner can clean up the process.
+
+#### GitHub Actions Trigger Policy
+
+The workflow uses only:
+
+```yaml
+on:
+  pull_request:
+    branches: ["main"]
+```
+
+This means every proposed merge into `main` is validated before review or merge, while direct pushes and version tags do not start this CI workflow.
 
 ## Repository Workflow
 
