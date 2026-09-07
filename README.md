@@ -279,7 +279,7 @@ The smoke test starts the container detached, follows its logs for ten seconds, 
 - **Docker CLI:** Builds the image, starts the smoke-test container, follows its logs, and removes it.
 - **Bash and `timeout`:** Orchestrate shell steps and bound the long-running smoke test.
 
-Because this workflow is intentionally pull-request-only, it does not publish GitHub Releases or GHCR packages. Those publishing steps should be placed in a separately protected release workflow triggered by an approved tag or manual dispatch.
+The separate `.github/workflows/release.yml` workflow publishes GitHub Releases and GHCR packages when a version tag such as `v1.0.2` is pushed. Keeping publishing separate means pull-request validation remains PR-only while releases still have a deliberate versioned trigger.
 
 #### CI Debugging and Hardening
 
@@ -302,6 +302,33 @@ on:
 ```
 
 This means every proposed merge into `main` is validated before review or merge, while direct pushes and version tags do not start this CI workflow.
+
+## Releases and GitHub Packages
+
+The repository uses two workflows with different responsibilities:
+
+- **`ci.yml`:** Runs only on pull requests targeting `main`. It validates the proposed change.
+- **`release.yml`:** Runs only when a tag matching `v*` is pushed. It publishes the Debian package and Docker image.
+
+To publish a release, update `packaging/debian/changelog` to the matching Debian version, merge the change into `main`, then create and push a tag:
+
+```bash
+git tag v1.0.2
+git push origin v1.0.2
+```
+
+The release workflow will:
+
+1. Build the `.deb` package.
+2. Create a GitHub Release for the tag and attach the `.deb` file.
+3. Publish the container image to GitHub Container Registry:
+
+```text
+ghcr.io/hossannazmultub/cpp-k8s-demo:v1.0.2
+ghcr.io/hossannazmultub/cpp-k8s-demo:latest
+```
+
+The workflow uses the automatically provided `GITHUB_TOKEN`; no personal access token is stored in the repository. The repository or organization package settings may require the package visibility to be changed from private to public before users can pull the image anonymously.
 
 ## Repository Workflow
 
